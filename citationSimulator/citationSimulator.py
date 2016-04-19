@@ -3,6 +3,22 @@
 Created on Thu Nov 19 18:23:52 2015
 
 @author: galileo
+
+Script to generate citations from various distributions and calculate metrics
+for journals of various sizes. 
+
+Distributions include: pareto, normal, log normal, uniform
+
+Each distribution has parameters with default values:
+
+mean of normal distribution: citationSimulatornormMean = 3.5
+sd of the normal distribution: citationSimulatornormSigma = 1.67186077
+paramter of the log normal distribution: citationSimulatorlogNormSigma = 1.67186077
+location of the log normal distribution:  citationSimulatorlogNormLoc = 0.34723183
+paramter of the pareto distribution: citationSimulatorparetoParam = 1.25
+maximum for uniform citations (min is 0): citationSimulatorflatCitesMax = 8.
+
+
 """
 # ========================================================
 
@@ -15,27 +31,39 @@ import scipy.stats as st
 import pandas as ps
 import impactFactor
 import os
+import extraMetrics
+import os
 
 
 # ========================================================
 
-class dataSimulator():
+class citationSimulator():
     
     def __init__(self):
+        ''' initialise variables 
+        
+        some variables:
+        n: (integer) number of papers to simulate 
+        journalSizes: (list of integers) sizes of journals to simulate metrics for
+        metricTypes: (list of strings) metrics from 'impactFactor' to simulate
+        metricsFile: (string) output filename to save metrics to
+        
+        File names for data from each distribution and distribution parameters are also set from here.
+              
+        '''
         
         #### Variables
     
         self.n = 10 # number of papers to simulate
         
-        ## filenames for output of citation data
-        self.folder = 'test/'
+        ## filenames for output of citation data (and input of stochastic data)
+        self.folder = 'test/' # folder that data is saved to
         
-        self.stochname = 'testCites 0-3.txt' # for input
-        self.fstoch = 'stochasticCitations.txt'
-        self.flognorm = 'logNormalCitations.txt'
-        self.fpareto = 'paretoCitations.txt'
-        self.fnormal = 'normalCitations.txt'
-        self.fflat = 'flat.txt'
+        self.fstoch = 'testCites 0-3.txt' # stochastic input name
+        self.flognorm = 'logNormalCitations.txt'  # log normal output name
+        self.fpareto = 'paretoCitations.txt' # pareto output name
+        self.fnormal = 'normalCitations.txt' # normal output name
+        self.fflat = 'flat.txt' # uniform output name
         
         ## for the distribution models
         self.normMean = 3.5
@@ -59,84 +87,100 @@ class dataSimulator():
         
         self.em = extraMetrics.extraMetrics()
 
-#### Custom functions
+    #### Data input and output
     
     def saveData(self, data, fname):
-        ''' save an array to file''' 
+        ''' save an array to file. Used when generating citations.
         
-        print(data)
-        print(np.shape(data))    
+        writes a text file with one number on each line, no header.
         
+        !! NB: Automatically overwrites if the file already exists !!
+        ''' 
+          
         f = open(self.folder + fname, 'w')
         for d in data:
-    #        d = data[dind]
             f.write(str(d) + '\n')
-            
         f.close()
         
     def loadData(self, fname):
-        ''' load from a list of numbers '''
+        ''' load from a list of numbers.
         
+        Can load data saved using self.saveData
+        
+        Returns: list of citations
+        
+        '''
+        
+        # open the file to write to
         try:
             f = open(fname)
         except:
-            print('file failed to open')
+            print('file failed to open ' + fname)
             return []
-                
+        
+        # read from file
         data = f.readlines()
+        # initialise output
         dataOut = []
         for d in data:
             dataOut.append(float(d))
             
+        # return list of citations
         return dataOut
         
         
     def loadStochasticData(self, fname, numArticles):
-        ''' open stochastic data from a file '''
+        ''' open stochastic data from a file
+
+        input data should be generated from the stochastic simulator
+        fname is the filename (string)
+        numArticles (integer) is the number of articles in the journal, some of which may not be cited
         
+        NB there's an assumption that articles are sequentially labelled with integers.
+        
+        returns: list of citations
+        
+        '''
+        
+        # read the file into a pandas array
         data = ps.read_csv(fname, header=0, sep=';')
-        print(data.keys())
-        
-    #    cites = {}
-    #    
-    #    for d in range(data.shape[0]):
-    #        if data['cited article'][str(d)] in cites:
-    #            
-    #            data['cited article'][str(d)] = data['cited article'][str(d)] + 1
-    #            
-    #        else:
-    #            data['cited article'][str(d)] = 1
                 
+        # Verify that the input number of articles isn't too small 
         m = np.max(data['cited article'])+1
         if m > numArticles:
             print('more articles found than expected')
             numArticles = m
-        cites = np.zeros(numArticles)
-    
-        for d in range(data.shape[0]):
-            article = data['cited article'][d]
             
+        # initialise number of citations for each article
+        cites = np.zeros(numArticles)
+
+        # add citations for each article from the data    
+        for d in range(data.shape[0]):
+            # add citation to number 'cited article' (assumes articles are sequentially listed using integers starting at 0)
+            article = data['cited article'][d]        
             cites[article] = cites[article] + 1
                 
+        # return list of citations (list)
         return cites
-        
-    #def loadStochasticData2(folder):
-    #    ''' load stochastic data from separate files '''
-    #    
-    #    files = os.listdir(folder)
-    #    
-    #    for f in files:
+          
             
-        
-    
     # ========================================================
     
     
     #### get data points
     
     def simDataFromFile(self):
+        ''' Simulate citations. Use this to load one data set for each 
+        distribution type: log normal, pareto, normal, uniform, stochastic data set.
+        
+        Returns: list containing lists of citations in the order stochCites, logNormalCites, paretoCites, normCites, flatCites
+        
+        note that the order of the output is the same as the default for self.citationLabels
+        
+        '''
     
-        stochCites = self.loadData(self.folder+ self.stochname)
+        # load stochastic citations
+        stochCites = self.loadData(self.folder+ self.fstoch)
         logNormalCites = self.loadData(self.folder + self.flognorm)
         paretoCites = self.loadData(self.folder + self.fpareto)
         normCites = self.loadData(self.folder + self.fnormal)
@@ -144,6 +188,43 @@ class dataSimulator():
         
         self.citationData = [stochCites, logNormalCites, paretoCites, normCites, flatCites]
                 
+
+    def simDataFromFolder(self, dataFolder):
+        ''' Load data saved in the same folder. The folder should ideally only 
+        contain citation files, it doesn't do a thorough check for file types 
+        and format.
+        
+        self.citationsLabels are regenerated from the file names
+        
+        returns: None
+        
+        Sets: self.citationData, self.citationLaels
+        
+        '''
+        
+        # get list of filenames
+        fnames = os.listdir(dataFolder)
+        
+        # reset citation labels
+        self.citationLabels =[]
+
+        # initialise output
+        self.citationData = [] 
+        
+        # iterate files
+        for f in fnames:
+            # open each file in turn
+            try:
+                # load data from file
+                data = self.loadData(dataFolder + f)
+                # save data
+                self.citationData.append(data)
+                # save data label from filename
+                self.citationLabels.append(f)
+            except:
+                # output something if the loading doesn't work
+                print(dataFolder + f + ' failed to load data')
+                    
     
     # ========================================================
 
@@ -313,8 +394,39 @@ class dataSimulator():
                         metricVals.append(metricVal)
                     
                     # record data
+                    print(ifCount, size, self.citationLabels, dataType)
                     self.impactFactors[str(ifCount)]  = [[size, self.citationLabels[dataType], m], metricVals]
                     ifCount = ifCount + 1
+                    
+                # find other metrics
+                    
+                vals = {}
+                for j in journals:
+                    
+                    em = extraMetrics.extraMetrics()
+                    em.citations = j
+                    
+                    # bradford boundary and ratios, h index and various percentiles
+                    exVals = em.findAllMetrics()
+
+                    # record the Bradford zones and ratios, h index and median
+                    count = 0
+                    for m in ['BF1', 'BF2', 'BR1', 'BR2', 'H', 'P50']:
+                        try:
+                            vals[m].append(exVals[count])
+                        except KeyError:
+                            vals[m] = [exVals[count]]
+
+                        count = count+1
+                        
+                for m in ['BF1', 'BF2', 'BR1', 'BR2', 'H', 'P50']:
+                    
+                    print(vals[m])
+
+                    self.impactFactors[str(ifCount)] = [[size, self.citationLabels[dataType], m], vals[m]]
+
+                    ifCount = ifCount + 1
+                    
                     
     
 #        self.journals = journals
@@ -337,6 +449,8 @@ class dataSimulator():
             f.write(line)
             
         f.close()
+        
+        print('data saved as ' + self.folder + self.metricsFile)
 
 
 if __name__=='__main__':
