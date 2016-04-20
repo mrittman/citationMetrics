@@ -25,14 +25,12 @@ maximum for uniform citations (min is 0): citationSimulatorflatCitesMax = 8.
 #### Load commands and functions
 
 import numpy as np
-from matplotlib import pyplot as plt
-import citationGenerator
+#from matplotlib import pyplot as plt
 import scipy.stats as st
 import pandas as ps
 import impactFactor
 import os
 import extraMetrics
-import os
 
 
 # ========================================================
@@ -59,7 +57,7 @@ class citationSimulator():
         ## filenames for output of citation data (and input of stochastic data)
         self.folder = 'test/' # folder that data is saved to
         
-        self.fstoch = 'testCites 0-3.txt' # stochastic input name
+        self.fstoch = 'test/stochasticTest.txt' # stochastic input name
         self.flognorm = 'logNormalCitations.txt'  # log normal output name
         self.fpareto = 'paretoCitations.txt' # pareto output name
         self.fnormal = 'normalCitations.txt' # normal output name
@@ -163,14 +161,9 @@ class citationSimulator():
         # return list of citations (list)
         return cites
           
-            
-    # ========================================================
-    
-    
-    #### get data points
     
     def simDataFromFile(self):
-        ''' Simulate citations. Use this to load one data set for each 
+        ''' Load citations from file. Use this to load one data set for each 
         distribution type: log normal, pareto, normal, uniform, stochastic data set.
         
         Returns: list containing lists of citations in the order stochCites, logNormalCites, paretoCites, normCites, flatCites
@@ -225,28 +218,38 @@ class citationSimulator():
                 # output something if the loading doesn't work
                 print(dataFolder + f + ' failed to load data')
                     
-    
-    # ========================================================
 
     def loadFromFile(self, filename):
-        ''' load citation data from a csv file'''
+        ''' load citation data contained in a single csv file. 
+        One data set per row, and the data separator is a semi-colon
+        
+        citation labels are integers
+
+        return: None
+        
+        sets: self.citationData, self.citationLabels
+        
+        '''
         
         # open file
         f = open(filename)
         data = f.readlines()
         
+        # initialise citation labels and names (count)
         self.citationLabels = []
         count = 0
 
         # each row is one set of citations
         self.citationData = []        
         for d in data:
+            # parse data
             cites = d.split(';')
             for c in range(len(cites)):
                 cites[c] = int(cites[c])
-                
                         
+            # save data
             self.citationData.append(cites)
+            # save data name
             self.citationLabels.append(str(count))
             
             count=count+1
@@ -257,13 +260,20 @@ class citationSimulator():
 
     # ========================================================
     
-    #### generate 30,000 data points from various disrubitions
+    ##### Functions to generate new citations
+
     def generateCitations(self):
+        ''' Generate citations. Use this to simulate one data set for each 
+        distribution type: log normal, pareto, normal, uniform, stochastic data set.
+        
+        Returns: list containing lists of citations in the order stochCites, logNormalCites, paretoCites, normCites, flatCites
+        
+        note that the order of the output is the same as the default for self.citationLabels
+        
+        '''
         
         # stochastic model
-        fname = 'bin/data/testCites 0-3.txt' 
-        #stochCites = loadStochasticData(fname, 0)
-        stochCites = self.loadData(fname)
+        stochCites = self.loadData(self.fstoch)
 
         # log normal        
         logNormalCites = self.generateLogNormalCites()
@@ -284,9 +294,16 @@ class citationSimulator():
         # collate all the data
         self.citationData = [stochCites, logNormalCites, paretoCites, normCites, flatCites]
         
+        return self.citationData
+        
     
     def generateAddCitations(self, citationType):
-        ''' generate a single citation set and add to self.citationData '''
+        ''' generate a single citation set and add to self.citationData.
+        
+        citationType (string): the distribution to use. Can be 'log normal', 'pareto',
+        'normal', or  'uniform'.
+        
+        '''
 
         # log normal        
         if citationType=='log normal':
@@ -312,6 +329,8 @@ class citationSimulator():
             
         
     def generateLogNormalCites(self):
+        ''' Generate log normal citations '''
+        
         # log normal
         logNormalCites = np.random.lognormal(self.logNormSigma, self.logNormLoc, size = self.n)
         logNormalCites = np.round(logNormalCites)
@@ -319,27 +338,34 @@ class citationSimulator():
         return logNormalCites
 
     def generateParetoCites(self):
+        ''' Generate pareto citations '''
         paretoCites = st.pareto.rvs(self.paretoParam, size=self.n)
         paretoCites = np.round(paretoCites)
 
         return paretoCites
         
     def generateNormCites(self):
+        ''' Generate log normal citations '''
         normCites = np.random.normal(self.normMean, self.normSigma, size = self.n)
         normCites = np.round(normCites)
 
         return normCites
         
     def generateFlatCites(self):
+        ''' Generate log normal citations '''
         flatCites = np.random.rand(self.n) * self.flatCitesMax
         flatCites = np.round(flatCites)
 
         return flatCites        
     
     # ========================================================
+
+    #### Post-simulation functions
     
     ## Cut-off for large values
     def cutOffData(self):
+        ''' Cut off citation data at a maximum value (self.maxCitations) '''
+        
         for data in self.citationData:
             for pt in range(len(data)):
                 
@@ -349,8 +375,18 @@ class citationSimulator():
     
     # ========================================================
     
-    ##### Sort into groups and calculate IFs
+    ##### Metric functions
+    
     def getMetrics(self):
+        ''' Split the data sets in self.citationData into journals of given size and calculate metrics.
+
+        Uses the following settings:
+        self.journalSizes (list of integers): journal sizes to split each data set into
+        self.metricTypes (list of strings): metrics from impactfactor.py to use
+        
+        Sets the values of self.impactFactors
+        
+        '''        
 
         ifCount = 0
         
@@ -457,12 +493,13 @@ if __name__=='__main__':
     
         # ========================================================
    
-    ds = dataSimulator() 
+    ds = citationSimulator() 
      
     # ========================================================
 
     # get the data
     ds.generateCitations()
+    print('citationdata', ds.citationData)
     # cut off data at some limit (optional)
     ds.cutOffData()
     # calculate metrics for various journal sizes
