@@ -3,10 +3,17 @@
 Created on Thu Mar 31 16:28:06 2016
 
 @author: galileo
+
+This script contains some measures of citations not based on the model 
+of the impact factor. It includes:
+
+
+
+
+
 """
 
 import numpy as np
-import scipy
 
 class extraMetrics():
     

@@ -7,6 +7,21 @@ Created on Fri Oct 17 20:25:25 2014
 This is code for generating various citation metrics from data. The input data 
 is in a file, and lists citations to a corpus of articles. 
 
+There are two methods for generating the metrics, dependent on the input file:
+
+1. impactfactor.getIF
+The citation file should be a csv file (seperator semi-colon) with headers:
+            'date of citation'\\
+            'date of publication'\\
+            'journal' : journal of cited article, or equivalent corpus identifier\\
+            'cited article' : ID of cited article, e.g. doi number
+            
+    Data can be filtered by date of citation and publication.          
+            
+            
+2. impactfacor.simpleIF
+Calculates from a list of citations. In this case there is no filtering possible.
+
 
 """
 
@@ -14,6 +29,7 @@ import pandas as ps
 import numpy as np
 #from string import split
 import math
+import extraMetrics
 
 class impactFactor():
     
@@ -35,7 +51,10 @@ class impactFactor():
 
         # options for filter of difference between citation and publication dates
         self.diffFilterType = 'top hat'
-        self.diffFilterOptions = {'upperBound': 5, 'lowerBound': 0, 'height': 1}          
+        self.diffFilterOptions = {'upperBound': 5, 'lowerBound': 0, 'height': 1}
+        
+        # additional metrics not based on the TR impact factor
+        self.em = extraMetrics.extraMetrics()
         
             
     #### Main calculation of Impact Factor        
@@ -43,21 +62,21 @@ class impactFactor():
     def getIF(self, citationFile, journal, numPapers, metricType='TR'):
         ''' calculate the impact factor
         
-        citationFile: string - name of file containing a list of citations\\
-        journal: string - name of 'journal' you want to calculate metric for\\
-        numPapers: integer - total number of papers published in journal in timeframe\\
-        timeFile: dictionary - parameters for timeFilter\\
+        citationFile: string - name of file containing a list of citations
+        journal: string - name of 'journal' you want to calculate metric for
+        numPapers: integer - total number of papers published in journal in timeframe
+        timeFile: dictionary - parameters for timeFilter
         metricType: string - method for calculating the citation metric
         
         Available methods are:
-            TR - the Thomson Reuters impact factor\\
-            MR1 - with discretized scoring of citations\\
+            TR - the Thomson Reuters impact factor
+            MR1 - with discretized scoring of citations
             MR2 - scaling of citations (continuous scaling function)
       
         The citation file should be a csv file (seperator semi-colon) with headers:
-            'date of citation'\\
-            'date of publication'\\
-            'journal' : journal of cited article, or equivalent corpus identifier\\
+            'date of citation'
+            'date of publication'
+            'journal' : journal of cited article, or equivalent corpus identifier
             'cited article' : ID of cited article, e.g. doi number
             
         NB filtering by journal not yet active
@@ -67,7 +86,6 @@ class impactFactor():
         # read in citation data from a csv file using Pandas
         data = ps.read_csv(citationFile, sep = ';', header = 0)
         print(data.keys())
-#        print('input data', data)
                 
         # calculate time between publication and citation
         # NB types after here are arrays
@@ -103,7 +121,7 @@ class impactFactor():
 #                if data['journal'][ind]==journal:
                 filteredData = filteredData.append(data[ind:ind+1])
                                         
-        # Get values of any additiional functions needed
+        # Get values of any additional functions needed
         options = self.getOptions(filteredData, optionsRequired = ['all'])
               
         ## ===========
@@ -127,6 +145,17 @@ class impactFactor():
             citationScores = self.citationScore2(options['citations per article'])           
             metric = float(sum(citationScores))/float(numPapers)  
             metric = self.citationScore2Inv(metric)
+            
+        elif metricType == 'H':
+            print('h index')
+            
+            self.em.citations = options['citations per article']
+            metric = self.em.hindex()
+            
+        elif metricType == 'median':
+            print('median')
+            
+            metric = np.percentile(self.citations, options['citations per article'])
   
         else:
             print('invalid metric defined')
@@ -145,35 +174,49 @@ class impactFactor():
     
         dataIn = np.array(dataIn)
         
+        # Thompson Reuters impact factor
         if metricType =='TR':
             print('Thomson Reuters type metric')  
             
             metric = sum(dataIn)/float(numPapers)
             
+        # Banded scoring system
         elif metricType == 'MR1':
             print('Rittman metric 1')
             
             citationScores = self.citationScore(dataIn)
             metric = float(sum(citationScores))/float(numPapers)
             
+        # Graduated scoring system
         elif metricType == 'MR2':
             print('Rittman metric 2')
             
             citationScores = self.citationScore2(dataIn)          
             metric = float(sum(citationScores))/float(numPapers)  
-            print(metric)
             metric = self.citationScore2Inv(metric)
             
+        # 'Extreme' metrics, takes the value of the first citation
         elif metricType == 'EX1':
             print('Extreme metric')
             
             metric = dataIn[0]
+
+        # H index            
+        elif metricType == 'H':
+            print('h index')
+            
+            self.em.citations = dataIn
+            metric = self.em.hindex()
+            
+        # median citations
+        elif metricType == 'median':
+            print('median')
+            
+            metric = np.percentile(self.citations, dataIn)          
             
         else:
             print('invalid metric defined')
             metric = 0
-
-#        print('calculated impact factor: ', metric)
 
         ## output        
         self.metric = metric
@@ -181,11 +224,12 @@ class impactFactor():
         return metric
 
 
-    #### Functions to filte and modify input        
+    #### Functions to filter and modify input        
         
     def applyFilter(self, dataIn, filtertype='default', options = []):
         ''' Apply some kind of crazy filter '''
         
+        # top hat filter (1 between bounds and zero elsewhere)
         if filtertype=='top hat':
             # options: lowerBound, upperBound, height
             dataOut = self.topHatFilter(dataIn, options)
@@ -211,6 +255,7 @@ class impactFactor():
         # initialise output
         options = {}
   
+        # calculate the number of citations for each paper
         if 'number of citations' in optionsRequired:
             
             # get number of citations per article
@@ -224,7 +269,7 @@ class impactFactor():
         
         
     def citationScore(self, cites):
-        ''' score citations on a roughly log scale '''
+        ''' score citations on a graduated scale, roughly logarithmic '''
 
         scores = []        
         for c in cites:
@@ -261,7 +306,7 @@ class impactFactor():
         '''        
         
         ht = 0.5 # the Nth citation has this value
-        N = 10. # N (see above)
+        N = 10. # N (see defn of ht)
 
         d = ht**(1./(N-1.))
         
@@ -275,7 +320,8 @@ class impactFactor():
         
         
         return scores
-        
+
+##       Working for the finite sum of a geometric progresion        
 #        s = (1 + d + d**2 + ... + d**(N-1)
 #         sd = d + d**2 + ... + d**(N)
 #         sd = s-1 + d**(N+1)
@@ -293,16 +339,12 @@ class impactFactor():
         '''
 
         ht = 0.5 # the Nth citation has this value
-        N = 10. # N (see above)
+        N = 10. # N (defn of ht)
 
         d = ht**(1./(N-1.))
 
         val = math.log(num * (d-1.) + 1., d)
-        print(d, num * (d-1.) + 1.)
-        print(num)
-        
-        # a logarithm missing here
-        
+                
         return val
   
   
@@ -335,13 +377,16 @@ class impactFactor():
         
       
 def strip(s):
-    ''' Remove odd characters from a string '''
+    ''' Remove odd characters from the beginning and end of a string '''
     
+    # characters to be removed
     ls = ['\n','\t', ' ']
     
+    # remove from the beginning
     while s[0] in ls:
         s = s[1:]
         
+    # remove from the end
     while s[-1] in ls:
         s = s[:-1]
         
@@ -352,15 +397,15 @@ if __name__=='__main__':
 
     ifc = impactFactor()
 
-    fname = 'citationSimulator/bin/data/testCites0-2.txt' 
-    numberOfPapersPublished = 500
-#    ifc.readData(fname)
-#    ifc.importDataFrame(fname)
+    fname = 'testIF.txt' 
+    numberOfPapersPublished = 10
+    ifc.readData(fname)
+    ifc.importDataFrame(fname)
         
 
-#    ifc.getIF(fname, 'journal', numberOfPapersPublished, metricType='TR')     
-#    ifc.getIF(fname, 'journal', numberOfPapersPublished, metricType='MR1')     
-#    ifc.getIF(fname, 'journal', numberOfPapersPublished, metricType='MR2')     
+    ifc.getIF(fname, 'journal', numberOfPapersPublished, metricType='TR')     
+    ifc.getIF(fname, 'journal', numberOfPapersPublished, metricType='MR1')     
+    ifc.getIF(fname, 'journal', numberOfPapersPublished, metricType='MR2')     
 
     cites = [0,1,5,3,0,6,9,4,0]
     
