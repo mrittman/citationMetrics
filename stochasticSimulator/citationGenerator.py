@@ -284,7 +284,7 @@ def function_P0(x):
         
 if __name__=='__main__':
     
-    x = np.arange(0., 5.)
+    x = np.arange(0., 10.)
     
 #    m = function_m(1, x)
 #    T = function_T(x, 6.6, 0.64)
@@ -303,16 +303,18 @@ if __name__=='__main__':
     
     cg = citationGenerator()
     cg.times = x
-    cg.numPapers = 30000
+    cg.numPapers = 10
     cg.p = 3.
 #    cites = cg.getCitations()
     cites, rawCites = cg.multiCitations()
     print(cites)
 
-    # equally spaced publication dates    
-    maxDate = 3.
-    gap = maxDate/(cg.numPapers-1)
-    pubDates = np.arange(0., maxDate + gap/2., gap)
+#    # equally spaced publication dates    
+#    maxDate = 3.
+#    gap = maxDate/(cg.numPapers-1)
+#    pubDates = np.arange(0., maxDate + gap/2., gap)
+
+    pubDates = np.zeros(cg.numPapers)    
     
     cg.saveCitations('cites.txt', pubDates = pubDates)
     
