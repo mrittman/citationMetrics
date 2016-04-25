@@ -6,7 +6,7 @@ Created on Fri Feb 13 17:27:15 2015
 
 Generate a citation history for some papers
 
-According to Golovosky ??
+According to Michael Golosovsky and Sorin Solomon (http://arxiv.org/abs/1410.0343v1)
 
 It combines several functions:
 
@@ -14,6 +14,24 @@ P = probability that a secondary paper cites a primary one
 m = mean citation rate
 M = number of primary references in a given year
 r = average number of the first-generation citing papers cited by a second-generation citing paper
+
+Variables in the citationGenerator (and default values):
+
+        numPapers = 1: number of papers to generate citations for
+        times = np.array([0.]): array of times at which  to sample citations. Best to keep to whole numbers
+
+        Function variables - values taken from the original paper, relevant to physics papers in the early '80s:
+
+        p = 5.          :'power' of article: equivalent to quality
+        alpha_M = 0.046 : parameter for function M (primary references)
+        beta_M = 0.02   : parameter for function M (primary references)
+        gamma = 0.064   : per year
+        Nratio = 1.5    : N = M/'N ratio' (N is ??)
+
+Functions available:
+
+multiCitations(self, filePrefix = 'citation') - get some ciations.
+
 
 """
 
@@ -40,32 +58,34 @@ class citationGenerator():
     def multiCitations(self, filePrefix = 'citation'):
         ''' get citations for a number of papers '''
 
-        rawCitations = []
-        citations = []
+        # initialise the outputs
+        rawCitations = [] # individual citations
+        citations = [] # citations per paper
+        
+        # iterate papers
         for n in range(self.numPapers):
-#            fname = filePrefix + '_' + str(n) + '.txt'
             print(n)
+            
+            # get the citations
             cites = self.getCitations()
+            
+            # record the individual citations and cites per paper
             rawCitations.append(cites)
             citations.append(np.sum(cites))
-            
-#            f = open(fname,'w')
-#            for c in cites:
-#                f.write(str(c) + '\n')
-#            f.close()
-            
-            
+
+        # outputs
         self.citations = rawCitations
         return citations, rawCitations
-        
 
 
     def getCitations(self):
-        ''' main function for generating citations '''
+        ''' main function for generating citations. Uses equations from Golosovsky paper '''
         
         # ADD A CHECK THAT IT'S AN ARRAY
+        # times at which to sample
         times = self.times
 
+        # 'power' parameter, roughly equivalent to quality of a paper
         p = self.p #np.random.rand()
 
         # terms
@@ -75,10 +95,11 @@ class citationGenerator():
         N = M/self.Nratio
         
         # records
-        citations = [0]
-        indirConts = [0]
-        dirConts = [0]
+        citations = [0]  # individual citations
+        indirConts = [0] # indirect contributions
+        dirConts = [0]   # direct contrbutions
 
+        # iterate time
         for t_ind in range(len(times)):
             
             t = times[t_ind]
@@ -87,31 +108,27 @@ class citationGenerator():
             else:
                 delta_t = times[t_ind] - times[t_ind-1]
             
+            # direct contribution
             directContribution = p * m[t_ind]
             # need to add variability in c - iterative
 
             # indirect contribution
             indirectContribution = 0.
             for s_ind in range(t_ind-1):
-                s = times[s_ind]
-                
+                s = times[s_ind]                
 #                lamdaA =  \sum_{\tau=0}^{t} P_{0}(k^{A}) e^{-\gamma(t-\tau)} N(t_ind-s) * citations[s]
                 indirectContribution = delta_t * P0[s_ind] * np.exp(-self.gamma * (t-s)*delta_t) * N[t_ind-s_ind] * citations[s_ind]
-#                indirectContribution = indirectContribution + add
-                
-       
+
+            # find the poisson distribution paraeter       
             lamda = directContribution + indirectContribution
-                    
-#            # put a maximum limit on lamda
-#            if lamda>100.:
-#                lamda = 100.
-            
-#            print('lamda = ', lamda)
+            # sample to find the citations
             citations.append(np.random.poisson(lamda))
 
             # record
             indirConts.append(indirectContribution)
             dirConts.append(directContribution)
+
+        ## outputs            
             
         # save data if there is none
         if self.citations == []:
@@ -170,7 +187,7 @@ def function_T(x, T0, gamma):
     
         x is an array, T0 and gamma are floats. 
         
-        From Golovosky, T0=6.6, gamma = 0.64 per year
+        From Golosovky, T0=6.6, gamma = 0.64 per year
     
     '''
     
@@ -186,7 +203,7 @@ def function_M(x, alpha, beta, m):
     
         x is an array, alpha and beta are floats. 
     
-        From Golovosky, alpha=0.046, beta = 0.02 for physics papers
+        From Golosovsky, alpha=0.046, beta = 0.02 for physics papers
         
     '''
 
@@ -241,7 +258,7 @@ def function_m(times, s, c, r):
 
 def function_m_interp(x):
     
-    ''' method for calculating m by interpolating data from Golobosky
+    ''' method for calculating m by interpolating data from Golosovsky
     
         x is times '''
     
