@@ -1,0 +1,50 @@
+10	uniform	MR2	3.02699533294
+10	uniform	H	4
+10	uniform	EX1	4.0
+10	uniform	P50	3.5
+10	pareto	BF1	3
+10	pareto	BF2	5
+10	pareto	BR1	1.66666666667
+10	pareto	BR2	2.0
+10	pareto	TR	8.1
+10	pareto	MR1	1.7
+10	pareto	MR2	4.61658269617
+10	pareto	EX1	2.0
+10	uniform	BR1	2.5
+10	uniform	BR2	2.0
+10	uniform	BF1	2
+10	uniform	BF2	5
+10	pareto	H	3
+10	pareto	P50	2.0
+10	uniform	TR	3.2
+10	uniform	MR1	1.1
+10	stochastic	MR1	0.9
+10	stochastic	TR	2.8
+10	stochastic	EX1	3.0
+10	stochastic	MR2	2.61167018502
+10	stochastic	BF2	6
+10	stochastic	BF1	2
+10	stochastic	BR2	1.66666666667
+10	stochastic	BR1	3.0
+10	stochastic	P50	2.0
+10	stochastic	H	3
+10	normal	P50	4.0
+10	normal	H	4
+10	log normal	MR1	1.4
+10	log normal	TR	5.9
+10	log normal	EX1	6.0
+10	log normal	MR2	5.75673292278
+10	log normal	BF2	6
+10	log normal	BF1	3
+10	log normal	BR2	1.66666666667
+10	log normal	BR1	2.0
+10	log normal	P50	5.0
+10	log normal	H	5
+10	normal	MR1	1.2
+10	normal	TR	4.4
+10	normal	BR2	1.42857142857
+10	normal	BR1	2.33333333333
+10	normal	BF2	7
+10	normal	BF1	3
+10	normal	EX1	4.0
+10	normal	MR2	4.3093379529

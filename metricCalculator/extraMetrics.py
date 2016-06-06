@@ -55,9 +55,10 @@ class extraMetrics():
 #        citationLim1 = cites
             
         # find second zone: number of articles accounting for second third of citations
-        while cites < 2*totalCites/3:
+        while (cites < 2*totalCites/3) & (n<(len(self.citations)-1)):
             
             n = n+1
+    
             cites = cites + self.citations[n]
     
         # record values
@@ -91,8 +92,11 @@ class extraMetrics():
         
         # go through to the find h index
         n=0
-        while citations[n]>=n:
+        while (citations[n]>=n):
             n = n+1
+            if n==len(citations):
+                n = n+1
+                break
           
         # return the correct value
         n = n-1

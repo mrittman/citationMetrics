@@ -5,14 +5,14 @@ Created on Tue Apr 12 12:50:59 2016
 @author: galileo
 """
 
-import analysis_variedPlots as avp
+import analysis_variedPlots_dict as avp
 
 pm = avp.plotMarker()
 
-folder = '/home/galileo/Dropbox/smart laptop/impactFactor/citationSimulator/bin/varied citations_2016-03-02/'    
-figFolder = 'variedPlots/'
-pm.inputfile = folder + 'metricOutputsVaried_0.1.csv'
-outputfile = folder + 'values.csv'
+folder = '/home/galileo/Dropbox/smart laptop/impactFactor/metricMetrics/bin/results/varied/'    
+figFolder = folder + 'plots_jsize100/'
+pm.inputfile = folder + 'variedMetrics100.txt'
+outputfile = folder + 'varied_values.csv'
 pm.loadData()
 
 filterOptions = [{'distribution':'flat', 'metric':'BF1'},
@@ -78,35 +78,27 @@ filterOptions = [{'distribution':'flat', 'metric':'BF1'},
 
 
 
-fitVals = []
+#fitVals = []
 for f in filterOptions:
     pm.filterData(f)
     title = f['distribution'] + ' ' + f['metric']
     print(title)
-#    pm.plotData(title)
-#    avp.plt.savefig(figFolder + title + '.png')
+    pm.plotData(title)
+    avp.plt.savefig(figFolder + title + '.png')
     
-    (grad, err) = pm.fitData()
-    fitVals.append([title, grad, err])    
-    
-print(fitVals)
+#    (grad, err) = pm.fitData()
+#    fitVals.append([title, grad, err])    
+#    
+#print(fitVals)
 
-g = open(outputfile, 'w')
-print(outputfile)
-g.write('name' + '\t' + 'gradient' + '\t' + 'error' +  '\n')
-for v in fitVals:
-    line = v[0] + '\t'+ str(v[1]) + '\t' + str(v[2]) + '\n'
-    g.write(line)
+#g = open(outputfile, 'w')
+#print(outputfile)
+#g.write('name' + '\t' + 'gradient' + '\t' + 'error' +  '\n')
+#for v in fitVals:
+#    line = v[0] + '\t'+ str(v[1]) + '\t' + str(v[2]) + '\n'
+#    g.write(line)
     
     
 g.close()
     
-    
-
-
-
-#    print(pm.metricData)
-
-#avp.plt.show()
-
-        
+  

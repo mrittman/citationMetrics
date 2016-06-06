@@ -56,6 +56,12 @@ class impactFactor():
         # additional metrics not based on the TR impact factor
         self.em = extraMetrics.extraMetrics()
         
+        # variables for MR2
+        ht = 0.5 # the Nth citation has this value
+        N = 10. # N (defn of ht)
+        # calculate value of d
+        self.d = ht**(1./(N-1.))
+        
             
     #### Main calculation of Impact Factor        
         
@@ -305,18 +311,14 @@ class impactFactor():
              
         '''        
         
-        ht = 0.5 # the Nth citation has this value
-        N = 10. # N (see defn of ht)
-
-        d = ht**(1./(N-1.))
         
-        if d==1.:
+        if self.d==1.:
             print('d==1 in citationScore2')
             
             return cites
         
         # calculate scores
-        scores = (d**(cites) - 1.)/(d-1.) 
+        scores = (self.d**(cites) - 1.)/(self.d-1.) 
         
         
         return scores
@@ -338,12 +340,15 @@ class impactFactor():
                 
         '''
 
-        ht = 0.5 # the Nth citation has this value
-        N = 10. # N (defn of ht)
+        # number to log
+        rawNum = num * (self.d-1.) + 1.
 
-        d = ht**(1./(N-1.))
+        # return 0 if this value is 0
+        if rawNum==0:
+            return 0.
 
-        val = math.log(num * (d-1.) + 1., d)
+        # calculate the inverse
+        val = math.log(rawNum, self.d)
                 
         return val
   

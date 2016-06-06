@@ -28,11 +28,8 @@ class plotMarker():
     def loadData(self):
         ''' load data from file. It should have columns: journal size, distribution, statistical parameter, metric type, metric value '''        
         
-        f = open(self.inputfile)
-        
+        f = open(self.inputfile)       
         self.metricData = ps.read_csv(self.inputfile, sep='\t')
-        
-        #
         
         
     def filterData(self, filterOptions):
@@ -51,6 +48,8 @@ class plotMarker():
         ''' plot filtered Data '''
         
         plt.figure()
+        
+        # when metric only has one value
         plt.plot(self.filteredData['distributionValue'], self.filteredData['metricValue'], 'gx')
         
         if plt.ylim()[1] <10:
@@ -87,10 +86,11 @@ if __name__=='__main__':
     
     pm = plotMarker()
     
-    folder = '/home/galileo/Dropbox/smart laptop/impactFactor/citationSimulator/bin/varied citations_2016-03-02/'    
-    pm.inputfile = folder + 'metricOutputsVaried_0.1.csv'
+    folder = '/home/galileo/Dropbox/smart laptop/impactFactor/metricMetrics/bin/results/varied/'    
+    pm.inputfile = folder + 'variedMetrics10.txt'
     
     pm.loadData()
+    print(pm.metricData)
     filterOptions = {'metric':'MR1', 'distribution':'flat'}
     pm.filterData(filterOptions)
 #    pm.plotData('plot')

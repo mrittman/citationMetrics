@@ -111,7 +111,7 @@ class citationSimulator():
         
         # open the file to write to
         try:
-            f = open(fname)
+            f = open(fname, 'r')
         except:
             print('file failed to open ' + fname)
             return []
@@ -210,6 +210,7 @@ class citationSimulator():
             try:
                 # load data from file
                 data = self.loadData(dataFolder + f)
+                print(f)
                 # save data
                 self.citationData.append(data)
                 # save data label from filename
@@ -409,7 +410,7 @@ class citationSimulator():
             
                     count = count+size
         
-            
+        
                 ## calculate IFs for each journal
         
                 metrics = {}
@@ -457,9 +458,10 @@ class citationSimulator():
                         
                 for m in ['BF1', 'BF2', 'BR1', 'BR2', 'H', 'P50']:
                     
-                    print(vals[m])
-
-                    self.impactFactors[str(ifCount)] = [[size, self.citationLabels[dataType], m], vals[m]]
+                    try:
+                        self.impactFactors[str(ifCount)] = [[size, self.citationLabels[dataType], m], vals[m]]
+                    except KeyError:
+                        pass
 
                     ifCount = ifCount + 1
                     
