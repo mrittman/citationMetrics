@@ -3,6 +3,17 @@
 Created on Fri Jun  3 07:36:22 2016
 
 @author: galileo
+
+Plot metrics resulting from two user-defined conditions against each other.
+
+use the functions in the order:
+
+loadData
+filterData
+plot
+
+
+
 """
 
 from string import split

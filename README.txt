@@ -25,8 +25,29 @@ In the bin folder is a folder ``analysisTools`` which contains some scripts to a
 Current progress
 =========
 
-All the code is there, but it's currently quite jumbled, so I will be working on making more sense of it, annontating, etc. 
-
 There is a related open science framework project at https://osf.io/wav8q/.
 
 Any questions can be sent to mrittman@phyiscs.org.
+
+
+Analysis tools
+=========
+
+They do the following:
+
+analysis_0.3.py calculates standard statistics sets of metrics generated from different conditions, i.e. journal size, distribution and metric type. Also makes box plots for each condition.
+
+
+analysis_variedPlots_dict.py make plots of metric against statistical (distribution intput) parameter for various metrics and distributions.
+
+metricAnalysis.py analysis of citation data. Calculates mean, standard deviation, minimum, maximum,
+10th, 50th and 90th percentiles. 
+
+Calculates ratios of citations with ratios 1, n, n**2, but this doesn't seem
+like very useful information (Bradford zones)
+
+Also makes box plots for each condition
+
+
+
+

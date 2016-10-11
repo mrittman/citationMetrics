@@ -23,6 +23,7 @@ class metricSet():
         self.vals = []
         
     def stats(self):
+	''' calculate all the relevant statistics for a set of data '''
         
         if len(self.vals)==0:
             print('no values')
@@ -58,11 +59,13 @@ class metricSet():
 
 
 class analysis():
-    
+    ''' Analysis of metric data for some journals: load data, calculate some
+	statistics and make box plots	
+
+    '''
+
     def __init__(self):
 
-#fname = 'citationSimulator/citationData/citation data 2016-02-04 v1/metricOutputs.csv'
-#    self. fname = 'citationSimulator/data 2016-03-17 varied v2_1/metrics_varied_v2_1.csv'
         # file containing citation metrics
         self.fname = ''
 
@@ -72,7 +75,7 @@ class analysis():
         self.plotFolder = ''
 
     def getData(self):
-        ''' load metrics from file each line has he journal size, distribution 
+        ''' load metrics from file. On dataset per line. Each line has the journal size, distribution 
         type and metric type followed by a list of metric values 
         
         also calculates statistics for each dataset
@@ -86,6 +89,7 @@ class analysis():
         # initialise output
         self.dataSets = []
         
+	# parse data into the metricSet instance
         for l in data:
             
             d = string.split(l, '\t')

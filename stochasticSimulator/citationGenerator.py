@@ -55,7 +55,7 @@ class citationGenerator():
         self.citations = []
         
 
-    def multiCitations(self, filePrefix = 'citation'):
+    def multiCitations(self):
         ''' get citations for a number of papers '''
 
         # initialise the outputs
@@ -138,10 +138,16 @@ class citationGenerator():
         
     def saveCitations(self, filename, pubDates = [], journalNames = []):
         ''' Save citations to file with columns:
-        'date of citation'
-            'date of publication'
-            'journal' : journal of cited article, or equivalent corpus identifier
-            'cited article' : ID of cited article, e.g. doi number'''
+        	'date of citation'
+            	'date of publication'
+            	'journal' : journal of cited article, or equivalent corpus identifier
+            	'cited article' : ID of cited article, e.g. doi number
+
+	    pubDates - if defined, gives the dates on which papers can be cited. Should be the same length as self.citations
+	    journalNames - the names of journals that cite the papers. If not defined, defaults to '0' for all papers. Must be the same length as self.citations.
+
+	
+	'''
             
         # first line
         lines = [['date of citation', '\t', 'date of publication','\t', 'journal', '\t', 'cited article', '\n']]
@@ -150,7 +156,7 @@ class citationGenerator():
         
         # publication dates (of cited papers), all  set to 0
         if pubDates == []:
-            pubDates = np.zeros(np.shape(self.citaions))
+            pubDates = np.zeros(np.shape(self.citations))
             
         # name of journal (all identical)
         if journalNames == []:
